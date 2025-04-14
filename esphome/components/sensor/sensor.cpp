@@ -85,7 +85,31 @@ void Sensor::clear_filters() {
 }
 float Sensor::get_state() const { return this->state; }
 float Sensor::get_raw_state() const { return this->raw_state; }
-std::string Sensor::unique_id() { return ""; }
+std::string Sensor::unique_id() {
+  // 如果子类没有覆盖，sensor_id 可能为空
+  static int default_sensor_counter = 0;
+
+  // 此处假设有一个 sensor_id，或者可以用 this->get_name() 来做
+  std::string id_suffix = this->sensor_id;  // 如果有的话
+  if (id_suffix.empty()) {
+    default_sensor_counter++;
+    // 若 get_name() 也为空，则使用 "default"
+    std::string base_name = this->get_name();
+    if (base_name.empty()) {
+      base_name = "default";
+    }
+    // 拼接计数器
+    id_suffix = base_name + "-" + std::to_string(default_sensor_counter);
+  }
+
+  // 如果能拿到 device_mac，则建议也加到前缀中
+  // 假设这里没有，就用设备名称或 "unknown_device"
+  std::string device_prefix = this->get_name();
+  if (device_prefix.empty()) {
+    device_prefix = "unknown_device";
+  }
+  return device_prefix + "-sensor-" + id_suffix;
+}
 
 void Sensor::internal_send_state_to_frontend(float state) {
   this->has_state_ = true;
